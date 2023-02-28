@@ -1,3 +1,44 @@
+# ============================= GENERAL PRINCIPLE ==============================
+# Synchronisation is achieved by a local interface for each client processing
+# key value pairs on the server which act as status flags. When a sender sends a
+# message, they update the server flags which notify the recipient that they are
+# the new sender. The recipient meanwhile, waits and repeatedly checks the flags
+# until it sees the sender has finished sending a message and that it is their
+# turn to be the sender.
+#
+# Deadlock is prevented in this implementation, the system should never be able
+# to reach a deadlock state (I hope). An example of this is in first time setup
+# preventing a 'circular wait' stalemate.This is described in further detail in
+# the relvant sections. Additionally, the priority system which determines who
+# is a sender and who is a recipient is implemented to prevent any ambiguity
+# arisng and therefore make deadlock scenarios unreachable.
+
+# ============================= RUNNING THE CODE ===============================
+# Each new client needs to be ran in it's own terminal window. There should not
+# be a need to use the browser interface.
+#
+# At any point during a client's runtime, pressing CTRL+C will force stop the
+# program. It is important to exit this way and not via CTRL+Z or closing the
+# terminal window otherwise the code required for a clean exit will not run.
+#
+# A client is considered connected after the user has entered their name upon
+# request. The first client to connect will not be able to send a message until
+# another client has also connected.
+#
+# If a sender disconnects, the recipient will be notifed and be asked to wait
+# for another client to connect.
+#
+# If a recipient disconnects, the sender will be notified **when they attempt to
+# send the next message** and will be asked to wait for another connection.
+#
+# If either client disconnects, another client instance can be started. The user
+# will be asked to enter their name and a new chat can begin.
+#
+# If both clients disconnect, ther server will be reset when the next client
+# instance is started up.
+
+# ================================== CODE ======================================
+
 # Time - Wait functionality
 # Sys - Exiting the program throught the code
 # Atexit - Exiting the program cleanly

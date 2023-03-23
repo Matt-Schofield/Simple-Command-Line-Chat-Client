@@ -27,8 +27,7 @@ class EchoServer(Server):
         socket.assigned_name = False
 
         socket.send("[SERVER] You are now connected".encode())
-        socket.send("[SERVER] Take care when typing inputs, if backspace, arrow keys, or similar are pressed the server will be unable to process it correctly".encode())
-        socket.send("[SERVER] Enter a display name: ".encode())
+        socket.send("[SERVER] (TELNET CLIENT ONLY) Take care when typing inputs, if backspace, arrow keys, or similar are pressed the server will be unable to process it correctly".encode())
 
         self.connections += 1
         print("[" + time.strftime("%H:%M:%S") + "] New client is connecting. " + str(self.connections) + " connections are now open.")
@@ -43,11 +42,11 @@ class EchoServer(Server):
             name = message.strip().lower()
             # Check the name is valid
             if not name.isalnum() or len(name) > 8 :
-                socket.send("[SERVER] Names should contain alphanumeric characters only and be at most 8 characters long, enter a different dispaly name: ".encode())
+                socket.send("[SERVER] Names should contain alphanumeric characters only and be at most 8 characters long".encode())
             elif name in self.client_names:
-                socket.send("[SERVER] Name is already taken (names are case insensitive), enter a different dispaly name: ".encode())
+                socket.send("[SERVER] Name is already taken (names are case insensitive)".encode())
             elif name in self.CLIENT_NAME_BLACKLIST:
-                socket.send("[SERVER] Protected name is not allowed, enter a different dispaly name: ".encode())
+                socket.send("[SERVER] Protected name is not allowed".encode())
             else:
                 # Name is valid, set socket values
                 socket.name = name
@@ -56,6 +55,8 @@ class EchoServer(Server):
                 # Set server values 
                 self.client_names.append(name)
                 self.client_sockets.append(socket)
+
+                self.sendToUser("100", socket.name, hidden=True)
 
                 print("[" + time.strftime("%H:%M:%S") + "] Client '" + name.upper() + "' connected. ")
                 self.sendToAll("User " + name.upper() + " has connected. There are " + str(self.connections - 1) + " other people connected.")
@@ -138,9 +139,9 @@ class EchoServer(Server):
 
         return True
 
-    def sendToUser(self, message_body, recipient, sender=None):
+    def sendToUser(self, message_body, recipient, sender=None, hidden=False):
         tag = ""
-        
+
         if sender == None:
             tag = "[SERVER]"
         else:
@@ -150,7 +151,11 @@ class EchoServer(Server):
 
         for client in self.client_sockets:
             if client.name == recipient:
-                client.send(message)   
+                if hidden == True:
+                    # If hidden just send the message body and the client will know not to dispaly it
+                    client.send(message_body.encode())
+                else:
+                    client.send(message)   
                 return True
             
         # If code is here then recipient was not found so notify the sender
@@ -164,8 +169,11 @@ class EchoServer(Server):
         return False
 
     def onDisconnect(self, socket):
+        self.sendToUser("200", socket.name, hidden=True)
+        
         self.connections -= 1
         print("[" + time.strftime("%H:%M:%S") + "] User " + socket.name + " disconnected. " + str(self.connections) + " clients now connected.")
+        self.client_names.remove(socket.name)
         self.client_sockets.remove(socket)
         
 	

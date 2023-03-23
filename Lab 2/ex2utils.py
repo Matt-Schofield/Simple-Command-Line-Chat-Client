@@ -20,7 +20,7 @@ class Socket():
 	
 	def send(self, msg):
 		# Ensure a single new-line after the message
-		self._socket.send(msg.strip()+b"\n")
+		self._socket.send(msg.strip()+b"\r\n")
 		
 	def close(self):
 		self._socket.close()
